@@ -1,12 +1,24 @@
 #Imports
+import dataUtils
+import numpy as np
 
+from keras.models import Sequential
+from keras.layers.recurrent import LSTM
 
 
 #Load data
+X = dataUtils.createRepresentation(limitSongs=10)
+input_dim = X.shape[2]
 
+#create Y
+#just need to finish the shift of X->Y
+#option 1: create tensor of same size as X, slice it omitting the first row of 2nd dim and concatenating it to the end
+#option 2: h
+Y = np.zeros(X.shape)
+for n in xrange(X.shape[0]):
+	Y[n] = np.concatenate((X[n][1:], [X[n][0]]))
 
-#Transform data to 3d tensor of dimensions (nb_samples, timesteps, input_dim)
-
+#Training data shape -> (nb_samples, timesteps, input_dim)
 
 #Build model
 print('Build model...')
