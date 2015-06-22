@@ -8,26 +8,29 @@ if "DICE" in os.environ and os.environ["DICE"] == 1:
 	DICE = True
 
 if DICE == False:
-	path = "/Users/Bernat/Dropbox/UoE/Dissertation/midiFiles/"
+	dataset_path = "/Users/Bernat/Dropbox/UoE/Dissertation/midiFiles/"
+	test_path = "/Users/Bernat/Dropbox/UoE/Dissertation/testMidi/"
+
 else:
-	path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/MidiFiles/"
+	dataset_path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/midiFiles/"
+	test_path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/testMidi/"
 
 
 
 def saveRepresentation(song, fileName):
-	with open(path + fileName, 'wb') as f:
+	with open(test_path + fileName, 'wb') as f:
 		pickle.dump(my_list, f)
 
 def loadRepresentation(fileName):
-	with open(path + fileName, 'rb') as f:
+	with open(test_path + fileName, 'rb') as f:
 		my_list = pickle.load(f)
 		return my_list
 
 def maxTimesteps(limitSongs):
 	maxSteps = 0
-	for fileName in os.listdir(path):
+	for fileName in os.listdir(dataset_path):
 		if ".mid" in fileName:
-			mid = MidiFile(path + fileName) 
+			mid = MidiFile(dataset_path + fileName) 
 			numSteps = 0
 			for message in mid.tracks[0]:
 				numSteps += message.time
@@ -43,9 +46,10 @@ def createRepresentation(limitSongs=0):
 	#To Do: extract notes that are triggered so that we can reduce the third dimension from 128 to a smaller value
 	songs = np.zeros((limitSongs, timesteps, 128))
 	idx = 0
-	for fileName in os.listdir(path): #iterate per file
+	for fileName in os.listdir(dataset_path): #iterate per file
 		if ".mid" in fileName: #check
-			mid = MidiFile(path + fileName) 
+			print "Loading file %d: %s" % (idx+1, fileName)
+			mid = MidiFile(dataset_path + fileName)
 			for i, track in enumerate(mid.tracks):
 				if i != 0: #track 0 contains meta info we don't need
 					ts = 0 #init time
@@ -57,7 +61,7 @@ def createRepresentation(limitSongs=0):
 								songs[idx][ts][note-1] = 1
 							ticks -= 1
 							ts += 1
-							
+
 						#update state at current timestep according to message
 						if message.type == 'note_on':
 							notesOn.append(message.note)
