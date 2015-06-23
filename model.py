@@ -1,9 +1,24 @@
 #Imports
 import dataUtils
 import numpy as np
+import os
 
 from keras.models import Sequential
 from keras.layers.recurrent import LSTM
+
+
+DICE = False
+if "DICE" in os.environ and os.environ["DICE"] == '1':
+	DICE = True
+
+if DICE == False:
+	print("Running on personal computer...")
+	dataset_path = "/Users/Bernat/Dropbox/UoE/Dissertation/midiFiles/"
+	test_path = "/Users/Bernat/Dropbox/UoE/Dissertation/testMidi/"
+else:
+	print("Running on DICE...")
+	dataset_path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/midiFiles/"
+	test_path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/testMidi/"
 
 
 #Load data
@@ -31,7 +46,8 @@ print("Train...")
 model.fit(X, Y, batch_size=12, nb_epoch=5, validation_split=0.1, show_accuracy=True)
 
 #Save model
-model.save_weights("/Users/Bernat/Dropbox/UoE/Dissertation/testMidi/model%d.h5" % int(time.time()))
+print("Saving model...")
+model.save_weights("%smodel%d.h5" % (test_path, int(time.time())))
 
 #Predict
 print ("Composing new song...")
