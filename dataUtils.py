@@ -39,16 +39,35 @@ def maxTimesteps(limitSongs):
 				break
 	return maxSteps
 
+def getTimesteps(limitSongs):
+	timesteps = []
+	for fileName in os.listdir(dataset_path):
+		if ".mid" in fileName:
+			mid = MidiFile(dataset_path + fileName) 
+			numSteps = 0
+			for message in mid.tracks[0]:
+				numSteps += message.time
+			timesteps.append(numSteps)
+			limitSongs -= 1
+			if limitSongs == 0:
+				break
+	return timesteps
+
+
 def createRepresentation(limitSongs=0):
-	timesteps = maxTimesteps(limitSongs)
 	#To Do: if limitSongs is bigger than the actual maximum or is 0 we should look for the number of files in the path to determine the first dimension
 	#To Do: extract notes that are triggered so that we can reduce the third dimension from 128 to a smaller value
-	songs = np.zeros((limitSongs, timesteps, 128))
+	
+	#timesteps = maxTimesteps(limitSongs)
+	#songs = np.zeros((limitSongs, timesteps, 128))
+	timesteps = getTimesteps(limitSongs)
+	songs = []
 	idx = 0
 	for fileName in os.listdir(dataset_path): #iterate per file
 		if ".mid" in fileName: #check
 			print "Loading file %d: %s" % (idx+1, fileName)
 			mid = MidiFile(dataset_path + fileName)
+			song = np.zeros(np.array((timesteps[idx], 128)))
 			for i, track in enumerate(mid.tracks):
 				if i != 0: #track 0 contains meta info we don't need
 					ts = 0 #init time
@@ -57,7 +76,8 @@ def createRepresentation(limitSongs=0):
 						ticks = message.time #indicates delta change where next event is happening
 						while ticks > 0: #advance timestep pointer to delta while we keep enabling the activated notes
 							for note in notesOn:
-								songs[idx][ts][note-1] = 1
+								#songs[idx][ts][note-1] = 1
+								song[ts][note-1] = 1
 							ticks -= 1
 							ts += 1
 
@@ -67,6 +87,9 @@ def createRepresentation(limitSongs=0):
 						if message.type == 'note_off':
 							notesOn.remove(message.note) #To do: check if ValueError is triggered
 
+			#add to songs
+			songs.append(song)
+
 			#check limit of songs for collection
 			limitSongs -= 1
 			if limitSongs == 0:
@@ -75,4 +98,40 @@ def createRepresentation(limitSongs=0):
 			#could merge idx with limitsongs
 
 	return songs
+
+
+#This function creates samples out of each song
+def createModelInputs(roll, step=1024, inc=8):
+	#split into arbitrary lenght sequences and extract next tone for a sequence (Y)
+	#To do (idea): split into shorter melodies cutting any empty part that is long enough.
+	X = []
+	Y = []
+	for song in roll:
+		pos = 0
+		#start (padding + seq)
+		empty = np.zeros((step,128))
+		while (pos < step and pos < song.shape[0]):
+			#zeros + part of seq
+			sample = np.concatenate((empty[pos:],song[:pos]))
+			X.append(sample)
+			Y.append(song[pos])
+			pos += inc
+
+		#if step is larger than song length
+		if pos < song.shape[0]:
+			continue
+
+		#mid
+		pos = 0
+		while pos < song.shape[0]:
+			sample = np.array(roll[pos:pos+step])
+			X.append(sample)
+			Y.append(song[pos+step])
+			pos += inc
+
+		#don't implement end (seq + padding) because that could encourage stopping
+
+
+	return np.array(X), np.array(Y)
+
 

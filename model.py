@@ -8,19 +8,17 @@ from keras.layers.recurrent import LSTM
 
 #Load data
 print("Loading data...")
-X = dataUtils.createRepresentation(limitSongs=10)
-input_dim = X.shape[2]
+roll = dataUtils.createRepresentation(limitSongs=10) #array of "piano roll" like representations
+input_dim = len(roll[0][0])
 
-#Transform X to create Y
+#Transform 
 print("Creating output sequences...")
-Y = np.zeros((X.shape[0], X.shape[2]))
-'''
-Y = np.zeros(X.shape[0])
-for n in xrange(X.shape[0]):
-	Y[n] = np.concatenate((X[n][1:], [X[n][0]]))
-'''
+X, Y = dataUtils.createModelInputs(roll)
 
-#Training data shape -> (nb_samples, timesteps, input_dim)
+
+#Training data shape:
+# X -> (nb_samples, timesteps, input_dim) => "sequences of tones"
+# Y -> (nb_samples, input_dim) => "next tone for every sequence"
 
 #Build model
 print("Build model...")
@@ -30,7 +28,7 @@ model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 #Train
 print("Train...")
-model.fit(X, Y, batch_size=2, nb_epoch=5, validation_split=0.1, show_accuracy=True)
+model.fit(X, Y, batch_size=12, nb_epoch=5, validation_split=0.1, show_accuracy=True)
 
 #Save model
 model.save_weights("/Users/Bernat/Dropbox/UoE/Dissertation/testMidi/model%d.h5" % int(time.time()))
