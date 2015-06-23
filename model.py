@@ -1,7 +1,7 @@
 #Imports
 import dataUtils
 import numpy as np
-import os
+import os, time
 
 from keras.models import Sequential
 from keras.layers.recurrent import LSTM
