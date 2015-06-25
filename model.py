@@ -65,7 +65,7 @@ song[0][-1][57] = 1
 song[0][-1][82] = 1
 for i in xrange(1000):
 	x = model.predict(song, batch_size=1)
-	song[0] = np.concatenate((song[0],x))
+	song = np.array([np.concatenate((song[0],x))])
 
 #Save data to midi file
 dataUtils.saveRepresentation(song, "songoutput%d.nn" % int(time.time))

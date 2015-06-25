@@ -104,36 +104,36 @@ def createRepresentation(limitSongs=0):
 def roll2midi(roll): #roll is a (1, ts, input_dim) tensor
 	mid = MidiFile()
 
-    track = MidiTrack()
-    mid.tracks.append(track)
+	track = MidiTrack()
+	mid.tracks.append(track)
 
-    #To Do: translate representation from real to binary values
+	#To Do: translate representation from real to binary values
 
-    tones = np.zeros(len(roll.shape[2]))
-    ticks = 0
-    for ts in roll[0]:
-    	for i in range(len(ts)):
-    		if ts[i] == 1 and tones[i] == 0:
-    			#record note_on event
-    			track.append(midi.Message('note_on', note=i, time=ticks))
-    			tones[i] = 1
-    			ticks = 0
+	tones = np.zeros(len(roll.shape[2]))
+	ticks = 0
+	for ts in roll[0]:
+		for i in range(len(ts)):
+			if ts[i] == 1 and tones[i] == 0:
+				#record note_on event
+				track.append(midi.Message('note_on', note=i, time=ticks))
+				tones[i] = 1
+				ticks = 0
 
-    		if ts[i] == 0 and tones[i] == 1:
-    			#record note_off event
-    			track.append(midi.Message('note_off', note=i, time=ticks))
-    			tones[i] = 0
-    			ticks = 0
+			if ts[i] == 0 and tones[i] == 1:
+				#record note_off event
+				track.append(midi.Message('note_off', note=i, time=ticks))
+				tones[i] = 0
+				ticks = 0
 
-    	ticks += 1
-
-
+		ticks += 1
 
 
-    #track.append(midi.Message('note_on', note=64, velocity=64, time=32)
-    #track.append(midi.Message('note_off', note=64, velocity=127, time=32)
 
-    mid.save("%snew_song%d.mid" % (test_path, int(time.time())))
+
+	#track.append(midi.Message('note_on', note=64, velocity=64, time=32)
+	#track.append(midi.Message('note_off', note=64, velocity=127, time=32)
+
+	mid.save("%snew_song%d.mid" % (test_path, int(time.time())))
 
 
 #This function creates samples out of each song
