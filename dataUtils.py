@@ -1,4 +1,4 @@
-from mido import MidiFile
+from mido import Message, MidiFile, MidiTrack
 from theano import tensor
 import os, copy, pickle
 import numpy as np
@@ -16,14 +16,14 @@ else:
 
 
 
-def saveRepresentation(song, fileName):
+def saveRepresentation(data, fileName):
 	with open(test_path + fileName, 'wb') as f:
-		pickle.dump(my_list, f)
+		pickle.dump(data, f)
 
 def loadRepresentation(fileName):
 	with open(test_path + fileName, 'rb') as f:
-		my_list = pickle.load(f)
-		return my_list
+		data = pickle.load(f)
+		return data
 
 def maxTimesteps(limitSongs):
 	maxSteps = 0
@@ -54,6 +54,7 @@ def getTimesteps(limitSongs):
 	return timesteps
 
 
+#perhaps it would make more sense to create a midi2roll function aside and simplify this one
 def createRepresentation(limitSongs=0):
 	#To Do: if limitSongs is bigger than the actual maximum or is 0 we should look for the number of files in the path to determine the first dimension
 	#To Do: extract notes that are triggered so that we can reduce the third dimension from 128 to a smaller value
@@ -98,6 +99,41 @@ def createRepresentation(limitSongs=0):
 			#could merge idx with limitsongs
 
 	return songs
+
+
+def roll2midi(roll): #roll is a (1, ts, input_dim) tensor
+	mid = MidiFile()
+
+    track = MidiTrack()
+    mid.tracks.append(track)
+
+    #To Do: translate representation from real to binary values
+
+    tones = np.zeros(len(roll.shape[2]))
+    ticks = 0
+    for ts in roll[0]:
+    	for i in range(len(ts)):
+    		if ts[i] == 1 and tones[i] == 0:
+    			#record note_on event
+    			track.append(midi.Message('note_on', note=i, time=ticks))
+    			tones[i] = 1
+    			ticks = 0
+
+    		if ts[i] == 0 and tones[i] == 1:
+    			#record note_off event
+    			track.append(midi.Message('note_off', note=i, time=ticks))
+    			tones[i] = 0
+    			ticks = 0
+
+    	ticks += 1
+
+
+
+
+    #track.append(midi.Message('note_on', note=64, velocity=64, time=32)
+    #track.append(midi.Message('note_off', note=64, velocity=127, time=32)
+
+    mid.save("%snew_song%d.mid" % (test_path, int(time.time())))
 
 
 #This function creates samples out of each song

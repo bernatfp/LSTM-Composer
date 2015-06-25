@@ -1,11 +1,15 @@
 #Imports
 import dataUtils
 import numpy as np
-import os, time
+import os, time, sys
 
 from keras.models import Sequential
 from keras.layers.recurrent import LSTM
 
+#We need to ensure we're using Python 2.7.x for it to work
+if sys.version_info[0] is not 2 and sys.version_info[1] is not 7:
+	print("Please run this program with Python 2.7")
+	sys.exit(-1)
 
 DICE = False
 if "DICE" in os.environ and os.environ["DICE"] == '1':
@@ -50,19 +54,18 @@ print("Saving model...")
 model.save_weights("%smodel%d.h5" % (test_path, int(time.time())))
 
 #Predict
-print ("Composing new song...")
-song = []
-x = [0] * input_dim
-for i in xrange(100000):
-	x = model.predict(x, batch_size=1)
-	song.append(x)
-x = [0] * input_dim
-x[50] = 1
-x[57] = 1
-x[82] = 1
-for i in xrange(100000):
-	x = model.predict(x, batch_size=1)
-	song.append(x)
+print("Composing new song...")
+song = np.zeros((1,1,input_dim))
+for i in xrange(3000):
+	x = model.predict(song, batch_size=1)
+	song = np.array([np.concatenate((song[0],x))])
+
+song[0][-1][50] = 1
+song[0][-1][57] = 1
+song[0][-1][82] = 1
+for i in xrange(1000):
+	x = model.predict(song, batch_size=1)
+	song[0] = np.concatenate((song[0],x))
 
 #Save data to midi file
 dataUtils.saveRepresentation(song, "songoutput%d.nn" % int(time.time))
