@@ -55,7 +55,7 @@ def getTimesteps(limitSongs):
 
 
 #perhaps it would make more sense to create a midi2roll function aside and simplify this one
-def createRepresentation(limitSongs=0):
+def createRepresentation(limitSongs=0, reductionRatio=128):
 	#To Do: if limitSongs is bigger than the actual maximum or is 0 we should look for the number of files in the path to determine the first dimension
 	#To Do: extract notes that are triggered so that we can reduce the third dimension from 128 to a smaller value
 	
@@ -68,10 +68,11 @@ def createRepresentation(limitSongs=0):
 		if ".mid" in fileName: #check
 			print "Loading file %d: %s" % (idx+1, fileName)
 			mid = MidiFile(dataset_path + fileName)
-			song = np.zeros(np.array((timesteps[idx], 128)))
+			song = np.zeros(np.array((np.ceil(timesteps[idx]/float(reductionRatio)), 128)))
 			for i, track in enumerate(mid.tracks):
 				if i != 0: #track 0 contains meta info we don't need
 					ts = 0 #init time
+					realts = 0
 					notesOn = []
 					for message in track:
 						ticks = message.time #indicates delta change where next event is happening
@@ -80,7 +81,9 @@ def createRepresentation(limitSongs=0):
 								#songs[idx][ts][note-1] = 1
 								song[ts][note-1] = 1
 							ticks -= 1
-							ts += 1
+							realts += 1
+							if np.floor(realts/float(reductionRatio)) > ts:
+								ts += 1
 
 						#update state at current timestep according to message
 						if message.type == 'note_on':
