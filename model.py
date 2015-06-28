@@ -27,12 +27,14 @@ else:
 
 #Load data
 print("Loading data...")
-roll = dataUtils.createRepresentation(limitSongs=10) #array of "piano roll" like representations
+roll = dataUtils.createRepresentation(limitSongs=100) #array of "piano roll" like representations
 input_dim = len(roll[0][0])
 
 #Transform 
 print("Creating output sequences...")
-X, Y = dataUtils.createModelInputs(roll)
+maxstep = np.max([s.shape[0] for s in roll])
+maxinc = maxstep
+X, Y = dataUtils.createModelInputs(roll, maxstep, maxinc) #one X per song
 
 
 #Training data shape:
@@ -56,14 +58,14 @@ model.save_weights("%smodel%d.h5" % (test_path, int(time.time())))
 #Predict
 print("Composing new song...")
 song = np.zeros((1,1,input_dim))
-for i in xrange(3000):
+for i in xrange(500):
 	x = model.predict(song, batch_size=1)
 	song = np.array([np.concatenate((song[0],x))])
 
 song[0][-1][50] = 1
 song[0][-1][57] = 1
 song[0][-1][82] = 1
-for i in xrange(1000):
+for i in xrange(500):
 	x = model.predict(song, batch_size=1)
 	song = np.array([np.concatenate((song[0],x))])
 
