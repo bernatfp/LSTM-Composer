@@ -32,9 +32,7 @@ input_dim = len(roll[0][0])
 
 #Transform 
 print("Creating output sequences...")
-maxstep = np.max([s.shape[0] for s in roll])
-maxinc = maxstep
-X, Y = dataUtils.createModelInputs(roll, maxstep, maxinc) #one X per song
+X, Y = dataUtils.createModelInputs(roll, noStep=True)
 
 
 #Training data shape:
