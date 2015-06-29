@@ -140,15 +140,30 @@ def roll2midi(roll): #roll is a (1, ts, input_dim) tensor
 
 
 #This function creates samples out of each song
-def createModelInputs(roll, step=1024, inc=8, noStep=False):
+def createModelInputs(roll, step=1024, inc=8, noStep=False, trunc=True):
+	#roll is a list of numpy.array
 	#split into arbitrary lenght sequences and extract next tone for a sequence (Y)
 	#To do (idea): split into shorter melodies cutting any empty part that is long enough.
 	X = []
 	Y = []
+	maxlength = max([len(s) for s in roll])-1
+	minlength = min([len(s) for s in roll])-1
 	for song in roll:
 		if noStep == True:
-			X.append(song[:-1])
-			Y.append(song[-1])
+			if trunc == False:
+				#don't use moving window to generate more instances of data
+				#pad with zeros instead to normalize data to same length
+				paddedsong = np.concatenate((np.zeros((maxlength - song.shape[0] + 1, 128)), song[:-1]))
+				X.append(paddedsong)
+				Y.append(song[-1])
+			else:
+				#truncate data to achieve same length
+				ptr = 0
+				while ptr < (song.shape[0]-1):
+					X.append(song[ptr:ptr+minlength])
+					Y.append(song[ptr+minlength])
+					ptr += minlength
+
 			continue
 
 		pos = 0

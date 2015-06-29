@@ -47,7 +47,7 @@ model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 #Train
 print("Train...")
-model.fit(X, Y, batch_size=12, nb_epoch=5, validation_split=0.1, show_accuracy=True)
+model.fit(X, Y, batch_size=1, nb_epoch=20)
 
 #Save model
 print("Saving model...")
@@ -68,4 +68,4 @@ for i in xrange(500):
 	song = np.array([np.concatenate((song[0],x))])
 
 #Save data to midi file
-dataUtils.saveRepresentation(song, "songoutput%d.nn" % int(time.time))
+dataUtils.saveRepresentation(song, "songoutput%d.nn" % int(time.time()))
