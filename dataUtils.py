@@ -159,7 +159,7 @@ def createModelInputs(roll, step=1024, inc=8, noStep=False, trunc=True):
 			else:
 				#truncate data to achieve same length
 				ptr = 0
-				while ptr < (song.shape[0]-1):
+				while ptr+minlength < (song.shape[0]-1):
 					X.append(song[ptr:ptr+minlength])
 					Y.append(song[ptr+minlength])
 					ptr += minlength
