@@ -27,12 +27,12 @@ else:
 
 #Load data
 print("Loading data...")
-roll = dataUtils.createRepresentation(limitSongs=100) #array of "piano roll" like representations
+roll = dataUtils.createRepresentation(limitSongs=10) #array of "piano roll" like representations
 input_dim = len(roll[0][0])
 
 #Transform 
 print("Creating output sequences...")
-X, Y = dataUtils.createModelInputs(roll, noStep=True)
+X, Y = dataUtils.createModelInputs(roll, noStep=True, trunc=True)
 
 
 #Training data shape:
