@@ -33,7 +33,8 @@ input_dim = len(roll[0][0])
 #Transform 
 print("Creating output sequences...")
 X, Y = dataUtils.createModelInputs(roll, noStep=True, trunc=True)
-
+X, Y, notesMap = dataUtils.compressInputs(X, Y)
+input_dim = len(notesMap)
 
 #Training data shape:
 # X -> (nb_samples, timesteps, input_dim) => "sequences of tones"
@@ -47,7 +48,7 @@ model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 #Train
 print("Train...")
-model.fit(X, Y, batch_size=1, nb_epoch=20)
+model.fit(X, Y, batch_size=12, nb_epoch=20)
 
 #Save model
 print("Saving model...")
