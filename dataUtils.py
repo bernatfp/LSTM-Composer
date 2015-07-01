@@ -147,7 +147,7 @@ def compressInputs(X, Y):
 			for k in range(X.shape[2]):
 				if X[i][j][k] == 1 and k in notesDel:
 					notesDel.remove(k)
-					
+
 	#Just in case Y is not contained within X (depends on previous processing of roll to create inputs)
 	for i in range(Y.shape[0]):
 		for k in range(Y.shape[1]):
@@ -156,14 +156,14 @@ def compressInputs(X, Y):
 		
 	X = np.delete(X, list(notesDel), 2)
 	Y = np.delete(Y, list(notesDel), 1)
-	
+
 	notesMap = set(range(128)).difference(notesDel)
-	
+
 	return X, Y, list(notesMap)
 
 
 #This function creates samples out of each song
-def createModelInputs(roll, step=1024, inc=8, noStep=False, trunc=True):
+def createModelInputs(roll, step=1024, inc=8, padding=False, noStep=False, trunc=True):
 	#roll is a list of numpy.array
 	#split into arbitrary lenght sequences and extract next tone for a sequence (Y)
 	#To do (idea): split into shorter melodies cutting any empty part that is long enough.
@@ -189,19 +189,21 @@ def createModelInputs(roll, step=1024, inc=8, noStep=False, trunc=True):
 
 			continue
 
-		pos = 0
+		
 		#start (padding + seq)
-		empty = np.zeros((step,128))
-		while (pos < step and pos < song.shape[0]):
-			#zeros + part of seq
-			sample = np.concatenate((empty[pos:],song[:pos]))
-			X.append(sample)
-			Y.append(song[pos])
-			pos += inc
+		if padding == True:
+			pos = 0
+			empty = np.zeros((step,128))
+			while (pos < step and pos < song.shape[0]):
+				#zeros + part of seq
+				sample = np.concatenate((empty[pos:],song[:pos]))
+				X.append(sample)
+				Y.append(song[pos])
+				pos += inc
 
-		#if step is larger than song length
-		if pos < song.shape[0]:
-			continue
+			#if step is larger than song length
+			if pos < song.shape[0]:
+				continue
 
 		#mid
 		pos = 0

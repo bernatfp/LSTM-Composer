@@ -57,14 +57,12 @@ model.save_weights("%smodel%d.h5" % (test_path, int(time.time())))
 #Predict
 print("Composing new song...")
 song = np.zeros((1,1,input_dim))
-for i in xrange(500):
+for i in xrange(100):
 	x = model.predict(song, batch_size=1)
 	song = np.array([np.concatenate((song[0],x))])
 
-song[0][-1][50] = 1
-song[0][-1][57] = 1
-song[0][-1][82] = 1
-for i in xrange(500):
+song[0][-1][1] = 1
+for i in xrange(200):
 	x = model.predict(song, batch_size=1)
 	song = np.array([np.concatenate((song[0],x))])
 
