@@ -27,12 +27,12 @@ else:
 
 #Load data
 print("Loading data...")
-roll = dataUtils.createRepresentation(limitSongs=10) #array of "piano roll" like representations
-input_dim = len(roll[0][0])
+roll = dataUtils.createRepresentation(limitSongs=2) #array of "piano roll" like representations
 
 #Transform 
 print("Creating output sequences...")
-X, Y = dataUtils.createModelInputs(roll, noStep=True, trunc=True)
+#X, Y = dataUtils.createModelInputs(roll, noStep=True, trunc=True)
+X, Y = dataUtils.createModelInputs(roll, step=200, inc=1)
 X, Y, notesMap = dataUtils.compressInputs(X, Y)
 input_dim = len(notesMap)
 
@@ -48,7 +48,7 @@ model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 #Train
 print("Train...")
-model.fit(X, Y, batch_size=12, nb_epoch=20)
+model.fit(X, Y, batch_size=1, nb_epoch=20)
 
 #Save model
 print("Saving model...")
