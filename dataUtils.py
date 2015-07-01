@@ -207,8 +207,8 @@ def createModelInputs(roll, step=1024, inc=8, padding=False, noStep=False, trunc
 
 		#mid
 		pos = 0
-		while pos < song.shape[0]:
-			sample = np.array(roll[pos:pos+step])
+		while pos+step < song.shape[0]:
+			sample = np.array(song[pos:pos+step])
 			X.append(sample)
 			Y.append(song[pos+step])
 			pos += inc
