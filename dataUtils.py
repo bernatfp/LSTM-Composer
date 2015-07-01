@@ -140,26 +140,25 @@ def roll2midi(roll): #roll is a (1, ts, input_dim) tensor
 
 
 #This function removes unnecessary notes and returns mapping of indexes to notes
-def compressInputs(X,Y):
+def compressInputs(X, Y):
 	notesDel = set(range(128))
 	for i in range(X.shape[0]):
 		for j in range(X.shape[1]):
 			for k in range(X.shape[2]):
 				if X[i][j][k] == 1 and k in notesDel:
 					notesDel.remove(k)
-
+					
 	#Just in case Y is not contained within X (depends on previous processing of roll to create inputs)
 	for i in range(Y.shape[0]):
 		for k in range(Y.shape[1]):
 			if Y[i][k] == 1 and k in notesDel:
 				notesDel.remove(k)
-
-	for note in notesDel:
-		X = np.delete(X, list(notesDel), 2)
-		Y = np.delete(Y, list(notesDel), 1)
-
+		
+	X = np.delete(X, list(notesDel), 2)
+	Y = np.delete(Y, list(notesDel), 1)
+	
 	notesMap = set(range(128)).difference(notesDel)
-
+	
 	return X, Y, list(notesMap)
 
 
