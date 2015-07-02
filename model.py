@@ -41,13 +41,19 @@ input_dim = len(notesMap)
 # Y -> (nb_samples, input_dim) => "next tone for every sequence"
 
 #Build model
-print("Build model...")
+print("Building model...")
 model = Sequential()
-model.add(LSTM(input_dim, input_dim))
+model.add(LSTM(input_dim, 512, return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(512, 512, return_sequences=False))
+model.add(Dropout(0.2))
+model.add(Dense(512, input_dim))
+
+print("Compiling model...")
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 #Train
-print("Train...")
+print("Training...")
 model.fit(X, Y, batch_size=1, nb_epoch=20)
 
 #Save model
@@ -68,3 +74,5 @@ for i in xrange(200):
 
 #Save data to midi file
 dataUtils.saveRepresentation(song, "songoutput%d.nn" % int(time.time()))
+
+print("Composing new song from previous song")
