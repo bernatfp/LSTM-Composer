@@ -4,6 +4,7 @@ import numpy as np
 import os, time, sys
 
 from keras.models import Sequential
+from keras.layers.core import Dense, Dropout
 from keras.layers.recurrent import LSTM
 
 #We need to ensure we're using Python 2.7.x for it to work
@@ -43,11 +44,11 @@ input_dim = len(notesMap)
 #Build model
 print("Building model...")
 model = Sequential()
-model.add(LSTM(input_dim, 512, return_sequences=True))
+model.add(LSTM(input_dim, 128, return_sequences=True))
 model.add(Dropout(0.2))
-model.add(LSTM(512, 512, return_sequences=False))
+model.add(LSTM(128, 128, return_sequences=False))
 model.add(Dropout(0.2))
-model.add(Dense(512, input_dim))
+model.add(Dense(128, input_dim))
 
 print("Compiling model...")
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
