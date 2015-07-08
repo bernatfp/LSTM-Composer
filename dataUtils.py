@@ -2,6 +2,7 @@ from mido import Message, MidiFile, MidiTrack
 from theano import tensor
 import os, copy, pickle
 import numpy as np
+import time
 
 DICE = False
 if "DICE" in os.environ and os.environ["DICE"] == '1':
@@ -54,11 +55,16 @@ def getTimesteps(limitSongs):
 	return timesteps
 
 
-#perhaps it would make more sense to create a midi2roll function aside and simplify this one
-def createRepresentation(limitSongs=0, reductionRatio=128):
+#This function loads the .mid files and converts them to a reduced (in the time axis) piano roll representation
+def createRepresentation(limitSongs=0, reductionRatio=128, test=False):
+	#perhaps it would make more sense to create a midi2roll function aside and simplify this one
 	#To Do: if limitSongs is bigger than the actual maximum or is 0 we should look for the number of files in the path to determine the first dimension
 	#To Do: extract notes that are triggered so that we can reduce the third dimension from 128 to a smaller value
 	
+	if test == True:
+		global dataset_path
+		dataset_path = dataset_path[:-1] + "Test/"
+
 	#timesteps = maxTimesteps(limitSongs)
 	#songs = np.zeros((limitSongs, timesteps, 128))
 	timesteps = getTimesteps(limitSongs)
@@ -103,8 +109,11 @@ def createRepresentation(limitSongs=0, reductionRatio=128):
 
 	return songs
 
+def thresholdOutput(x):
+	return [0 if note < 0.5 else 1 for note in x]
 
-def roll2midi(roll): #roll is a (1, ts, input_dim) tensor
+
+def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim) tensor
 	mid = MidiFile()
 
 	track = MidiTrack()
@@ -112,24 +121,29 @@ def roll2midi(roll): #roll is a (1, ts, input_dim) tensor
 
 	#To Do: translate representation from real to binary values
 
-	tones = np.zeros(len(roll.shape[2]))
+	tones = np.zeros(roll.shape[2])
 	ticks = 0
 	for ts in roll[0]:
 		for i in range(len(ts)):
 			if ts[i] == 1 and tones[i] == 0:
 				#record note_on event
-				track.append(midi.Message('note_on', note=i, time=ticks))
+				track.append(Message('note_on', velocity=127, note=notesMap[i], time=ticks*reductionRatio))
 				tones[i] = 1
 				ticks = 0
 
 			if ts[i] == 0 and tones[i] == 1:
 				#record note_off event
-				track.append(midi.Message('note_off', note=i, time=ticks))
+				track.append(Message('note_off', velocity=127, note=notesMap[i], time=ticks*reductionRatio))
 				tones[i] = 0
 				ticks = 0
 
 		ticks += 1
 
+	#last pass for notes off (end of track)	
+	for i in range(roll.shape[2]):
+		if tones[i] == 1:
+			track.append(Message('note_off', note=notesMap[i], time=ticks*reductionRatio))
+			ticks = 0
 
 
 
@@ -137,6 +151,8 @@ def roll2midi(roll): #roll is a (1, ts, input_dim) tensor
 	#track.append(midi.Message('note_off', note=64, velocity=127, time=32)
 
 	mid.save("%snew_song%d.mid" % (test_path, int(time.time())))
+
+	return mid
 
 
 #This function removes unnecessary notes and returns mapping of indexes to notes
@@ -202,7 +218,7 @@ def createModelInputs(roll, step=1024, inc=8, padding=False, noStep=False, trunc
 				pos += inc
 
 			#if step is larger than song length
-			if pos < song.shape[0]:
+			if pos >= song.shape[0]:
 				continue
 
 		#mid
@@ -217,5 +233,18 @@ def createModelInputs(roll, step=1024, inc=8, padding=False, noStep=False, trunc
 
 
 	return np.array(X), np.array(Y)
+
+
+def countDifferentTones(song):
+	if len(song.shape) == 3 and song.shape[0] == 1:
+		song = song[0]
+	tones = 0
+	for i in xrange(len(song)-1):
+		if np.sum(song[i]-song[i+1]) > 0:
+			tones += 1
+	return tones
+
+
+
 
 
