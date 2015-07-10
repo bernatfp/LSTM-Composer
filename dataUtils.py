@@ -109,8 +109,11 @@ def createRepresentation(limitSongs=0, reductionRatio=128, test=False):
 
 	return songs
 
-def thresholdOutput(x):
-	return [0 if note < 0.5 else 1 for note in x]
+def thresholdOutput(x, threshold=0.5):
+	return [0 if note < threshold else 1 for note in x]
+
+def sampleOutput(x):
+	return [0 if np.random.uniform() > note else 1 for note in x]
 
 
 def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim) tensor
