@@ -1,5 +1,5 @@
 #Imports
-import dataUtils
+import dataUtils, modelUtils
 import numpy as np
 import os, time, sys
 
@@ -28,12 +28,12 @@ else:
 
 #Load data
 print("Loading data...")
-roll = dataUtils.createRepresentation(limitSongs=2) #array of "piano roll" like representations
+roll = dataUtils.createRepresentation(limitSongs=1, test=True) #array of "piano roll" like representations
 
 #Transform 
 print("Creating output sequences...")
-#X, Y = dataUtils.createModelInputs(roll, noStep=True, trunc=True)
-X, Y = dataUtils.createModelInputs(roll, step=200, inc=1)
+step = 50
+X, Y = dataUtils.createModelInputs(roll, padding=True, step=step, inc=1)
 X, Y, notesMap = dataUtils.compressInputs(X, Y)
 input_dim = len(notesMap)
 
@@ -44,18 +44,17 @@ input_dim = len(notesMap)
 #Build model
 print("Building model...")
 model = Sequential()
-model.add(LSTM(input_dim, 128, return_sequences=True))
-model.add(Dropout(0.2))
-model.add(LSTM(128, 128, return_sequences=False))
-model.add(Dropout(0.2))
-model.add(Dense(128, input_dim))
+model.add(LSTM(input_dim, input_dim*2, return_sequences=True))
+model.add(Dense(input_dim*2, input_dim*2))
+model.add(LSTM(input_dim*2, input_dim))
+
 
 print("Compiling model...")
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 #Train
 print("Training...")
-model.fit(X, Y, batch_size=1, nb_epoch=20)
+model.fit(X, Y, batch_size=1, nb_epoch=200)
 
 #Save model
 print("Saving model...")
@@ -63,17 +62,12 @@ model.save_weights("%smodel%d.h5" % (test_path, int(time.time())))
 
 #Predict
 print("Composing new song...")
-song = np.zeros((1,1,input_dim))
-for i in xrange(100):
-	x = model.predict(song, batch_size=1)
-	song = np.array([np.concatenate((song[0],x))])
+(song, energy) = modelUtils.generateSong(model, X[step])
 
-song[0][-1][1] = 1
-for i in xrange(200):
-	x = model.predict(song, batch_size=1)
-	song = np.array([np.concatenate((song[0],x))])
-
-#Save data to midi file
+#Save data to representation and midi formats
+print("Storing song representation")
 dataUtils.saveRepresentation(song, "songoutput%d.nn" % int(time.time()))
+print("Storing song in midi format")
+dataUtils.roll2midi(song)
 
-print("Composing new song from previous song")
+
