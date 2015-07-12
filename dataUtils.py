@@ -1,5 +1,5 @@
 from mido import Message, MidiFile, MidiTrack
-from theano import tensor
+import matplotlib.pyplot as plt
 import os, copy, pickle
 import numpy as np
 import time
@@ -247,6 +247,10 @@ def countDifferentTones(song):
 			tones += 1
 	return tones
 
+
+def plotSong(song):
+	plt.matshow(np.transpose(song))
+	plt.show()
 
 
 
