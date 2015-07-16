@@ -6,6 +6,7 @@ import os, time, sys
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
 from keras.layers.recurrent import LSTM
+from keras.callbacks import ModelCheckpoint
 
 #We need to ensure we're using Python 2.7.x for it to work
 if sys.version_info[0] is not 2 and sys.version_info[1] is not 7:
@@ -54,11 +55,14 @@ model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 #Train
 print("Training...")
-model.fit(X, Y, batch_size=1, nb_epoch=200)
+checkpointer = ModelCheckpoint(filepath="%stempmodel%d.h5" % (test_path, int(time.time())), verbose=1, save_best_only=True)
+history = modelUtils.LossHistory()
+model.fit(X, Y, batch_size=1, nb_epoch=100, callbacks=[checkpointer, history])
 
 #Save model
 print("Saving model...")
-model.save_weights("%smodel%d.h5" % (test_path, int(time.time())))
+currentTime = int(time.time())
+model.save_weights("%smodel%d.h5" % (test_path, currentTime))
 
 #Predict
 print("Composing new song...")
@@ -66,8 +70,12 @@ print("Composing new song...")
 
 #Save data to representation and midi formats
 print("Storing song representation")
-dataUtils.saveRepresentation(song, "songoutput%d.nn" % int(time.time()))
+dataUtils.saveRepresentation(song, "songoutput%d.nn" % (currentTime))
 print("Storing song in midi format")
 dataUtils.roll2midi(song)
+print("Loss history")
+print(history.losses)
+dataUtils.saveRepresentation(history.losses, "losses%d.nn" % (currentTime))
 
 
+print "Finished execution at time %d" % (currentTime)
