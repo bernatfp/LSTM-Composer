@@ -57,7 +57,7 @@ model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 print("Training...")
 checkpointer = ModelCheckpoint(filepath="%stempmodel%d.h5" % (test_path, int(time.time())), verbose=1, save_best_only=True)
 history = modelUtils.LossHistory()
-model.fit(X, Y, batch_size=1, nb_epoch=100, callbacks=[checkpointer, history])
+model.fit(X, Y, batch_size=12, nb_epoch=100, callbacks=[checkpointer, history])
 
 #Save model
 print("Saving model...")
