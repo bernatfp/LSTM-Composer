@@ -27,9 +27,9 @@ model.add(LSTM(5, 5))
 '''
 #'''M2
 model = Sequential()
-model.add(LSTM(5, 10, return_sequences=True))
-model.add(Dense(10, 10))
-model.add(LSTM(10, 5))
+model.add(LSTM(input_dim, input_dim*2, return_sequences=True))
+model.add(Dense(input_dim*2, input_dim*2))
+model.add(LSTM(input_dim*2, input_dim))
 #'''
 
 
@@ -45,13 +45,17 @@ for i in xrange(1, data.shape[1]):
 	print data[0][i]
 
 
-song = X[100][-10:]
-for i in xrange(100):
-	lastnotes = np.array([song[-10:]])
+song = X[50]
+energy = []
+for i in xrange(300):
+	lastnotes = np.array([song[-20:]])
 	x = model.predict(lastnotes, batch_size=1)
-	x[0] = thresholdOutput(x[0])
+	energy.extend(copy.copy(x))
+	x[0] = dataUtils.sampleOutput(x[0])
 	song = np.concatenate((song, x))
 
+plt.matshow(np.transpose(song)); plt.show()
+plt.matshow(np.transpose(energy)); plt.show()
 
 '''
 test1 = np.array([[X[2][0]]])
@@ -78,4 +82,4 @@ print Y[2]
 '''
 
 
-mid = dataUtils.roll2midi(np.array([song[10:]]), notesMap)
+mid = dataUtils.roll2midi(np.array([song[50:]]), notesMap)
