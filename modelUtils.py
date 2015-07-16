@@ -1,15 +1,15 @@
+from keras.callbacks import Callback
 import numpy as np
 import copy
-import keras
 
 import dataUtils
 
-class LossHistory(keras.callbacks.Callback):
-    def on_train_begin(self, logs={}):
-        self.losses = []
+class LossHistory(Callback):
+	def on_train_begin(self, logs={}):
+		self.losses = []
 
-    def on_batch_end(self, batch, logs={}):
-        self.losses.append(logs.get('loss'))
+	def on_batch_end(self, batch, logs={}):
+		self.losses.append(logs.get('loss'))
 
 
 def generateSong(model, kickstart, method="sample", chunkLength=20, songLength=3000):
