@@ -28,7 +28,7 @@ else:
 
 #Load data
 print("Loading data...")
-roll = dataUtils.createRepresentation(limitSongs=1, test=True) #array of "piano roll" like representations
+roll = dataUtils.createRepresentation(limitSongs=20) #array of "piano roll" like representations
 
 #Transform 
 print("Creating output sequences...")
