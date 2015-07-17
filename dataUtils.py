@@ -26,6 +26,7 @@ def loadRepresentation(fileName):
 		data = pickle.load(f)
 		return data
 
+
 def maxTimesteps(limitSongs):
 	maxSteps = 0
 	for fileName in os.listdir(dataset_path):
@@ -40,11 +41,11 @@ def maxTimesteps(limitSongs):
 				break
 	return maxSteps
 
-def getTimesteps(limitSongs):
+def getTimesteps(dataDir, limitSongs):
 	timesteps = []
-	for fileName in os.listdir(dataset_path):
+	for fileName in os.listdir(dataDir):
 		if ".mid" in fileName:
-			mid = MidiFile(dataset_path + fileName) 
+			mid = MidiFile(dataDir + fileName) 
 			numSteps = 0
 			for message in mid.tracks[0]:
 				numSteps += message.time
@@ -56,24 +57,23 @@ def getTimesteps(limitSongs):
 
 
 #This function loads the .mid files and converts them to a reduced (in the time axis) piano roll representation
-def createRepresentation(limitSongs=0, reductionRatio=128, test=False):
+def createRepresentation(dataDir, limitSongs=0, reductionRatio=128):
 	#perhaps it would make more sense to create a midi2roll function aside and simplify this one
 	#To Do: if limitSongs is bigger than the actual maximum or is 0 we should look for the number of files in the path to determine the first dimension
 	#To Do: extract notes that are triggered so that we can reduce the third dimension from 128 to a smaller value
 	
-	if test == True:
-		global dataset_path
-		dataset_path = dataset_path[:-1] + "Test/"
+	if dataDir[-1] != '/':
+		dataDir += '/'
 
 	#timesteps = maxTimesteps(limitSongs)
 	#songs = np.zeros((limitSongs, timesteps, 128))
-	timesteps = getTimesteps(limitSongs)
+	timesteps = getTimesteps(dataDir, limitSongs)
 	songs = []
 	idx = 0
-	for fileName in os.listdir(dataset_path): #iterate per file
+	for fileName in os.listdir(dataDir): #iterate per file
 		if ".mid" in fileName: #check
 			print "Loading file %d: %s" % (idx+1, fileName)
-			mid = MidiFile(dataset_path + fileName)
+			mid = MidiFile(dataDir + fileName)
 			song = np.zeros(np.array((np.ceil(timesteps[idx]/float(reductionRatio)), 128)))
 			for i, track in enumerate(mid.tracks):
 				if i != 0: #track 0 contains meta info we don't need
@@ -182,7 +182,7 @@ def compressInputs(X, Y):
 
 
 #This function creates samples out of each song
-def createModelInputs(roll, step=1024, inc=8, padding=False, noStep=False, trunc=True):
+def createModelInputs(roll, seqLength=50, inc=1, padding=False):
 	#roll is a list of numpy.array
 	#split into arbitrary lenght sequences and extract next tone for a sequence (Y)
 	#To do (idea): split into shorter melodies cutting any empty part that is long enough.
@@ -191,28 +191,10 @@ def createModelInputs(roll, step=1024, inc=8, padding=False, noStep=False, trunc
 	maxlength = max([len(s) for s in roll])-1
 	minlength = min([len(s) for s in roll])-1
 	for song in roll:
-		if noStep == True:
-			if trunc == False:
-				#don't use moving window to generate more instances of data
-				#pad with zeros instead to normalize data to same length
-				paddedsong = np.concatenate((np.zeros((maxlength - song.shape[0] + 1, 128)), song[:-1]))
-				X.append(paddedsong)
-				Y.append(song[-1])
-			else:
-				#truncate data to achieve same length
-				ptr = 0
-				while ptr+minlength < (song.shape[0]-1):
-					X.append(song[ptr:ptr+minlength])
-					Y.append(song[ptr+minlength])
-					ptr += minlength
-
-			continue
-
-		
 		#start (padding + seq)
 		if padding == True:
 			pos = 0
-			empty = np.zeros((step,128))
+			empty = np.zeros((seqLength,128))
 			while (pos < step and pos < song.shape[0]):
 				#zeros + part of seq
 				sample = np.concatenate((empty[pos:],song[:pos]))
@@ -220,16 +202,16 @@ def createModelInputs(roll, step=1024, inc=8, padding=False, noStep=False, trunc
 				Y.append(song[pos])
 				pos += inc
 
-			#if step is larger than song length
+			#if seqLength is larger than song length
 			if pos >= song.shape[0]:
 				continue
 
 		#mid
 		pos = 0
-		while pos+step < song.shape[0]:
-			sample = np.array(song[pos:pos+step])
+		while pos+seqLength < song.shape[0]:
+			sample = np.array(song[pos:pos+seqLength])
 			X.append(sample)
-			Y.append(song[pos+step])
+			Y.append(song[pos+seqLength])
 			pos += inc
 
 		#don't implement end (seq + padding) because that could encourage stopping

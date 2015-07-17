@@ -13,6 +13,7 @@ if sys.version_info[0] is not 2 and sys.version_info[1] is not 7:
 	print("Please run this program with Python 2.7")
 	sys.exit(-1)
 
+#move this logic to the .ini file
 DICE = False
 if "DICE" in os.environ and os.environ["DICE"] == '1':
 	DICE = True
@@ -27,14 +28,32 @@ else:
 	test_path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/testMidi/"
 
 
+#Load configuration
+print ("Loading configuration...")
+params = modelUtils.loadIni(sys.argv[1] if len(sys.argv) == 2 else "config.ini")
+
+print("Configuration: ")
+for (key, value) in params.items():
+	print(key + ":  " + str(value))
+
+while 1:
+	user_input = raw_input("Continue? [y]/n: ")
+	if user_input == 'n':
+		print("Exiting...")
+		sys.exit(-1)
+	elif user_input == 'y' or user_input == '':
+		break
+	else:
+		print("Please press ENTER or 'y' if you want to continue, or 'n' if you wish to abort.")
+		continue
+
 #Load data
 print("Loading data...")
-roll = dataUtils.createRepresentation(limitSongs=20) #array of "piano roll" like representations
+roll = dataUtils.createRepresentation(params["dataDir"], limitSongs=params["limitSongs"], reductionRatio=params["reductionRatio"]) #array of "piano roll" like representations
 
 #Transform 
 print("Creating output sequences...")
-step = 50
-X, Y = dataUtils.createModelInputs(roll, padding=True, step=step, inc=1)
+X, Y = dataUtils.createModelInputs(roll, padding=params["padding"], seqLength=params["seqLength"], inc=params["inc"])
 X, Y, notesMap = dataUtils.compressInputs(X, Y)
 input_dim = len(notesMap)
 

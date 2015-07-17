@@ -1,8 +1,28 @@
 from keras.callbacks import Callback
 import numpy as np
-import copy
-
+import copy, ConfigParser
 import dataUtils
+
+
+def loadIni(name):
+	config = ConfigParser.ConfigParser()
+	config.read(name)
+
+	params = {}
+
+	params["dataDir"] = config.get("data", "data-dir") or "./"
+	params["limitSongs"] = int(config.get("data", "limit-songs")) or 1
+	params["inc"] = int(config.get("data", "inc")) or 1
+	params["seqLength"] = int(config.get("data", "seq-length")) or 50
+	params["padding"] = bool(config.get("data", "padding")) or True
+	params["reductionRatio"] = int(config.get("data", "reduction-ratio")) or 128
+
+	params["epochs"] = int(config.get("model", "epochs")) or 100
+	params["batchSize"] = int(config.get("model", "batch-size")) or 12
+
+
+
+	return params
 
 class LossHistory(Callback):
 	def on_train_begin(self, logs={}):
@@ -32,3 +52,4 @@ def generateSong(model, kickstart, method="sample", chunkLength=20, songLength=3
 		song = np.concatenate((song, x))
 
 	return (song, probs)
+
