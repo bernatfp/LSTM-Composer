@@ -75,7 +75,7 @@ model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 #Train
 print("Training...")
-checkpointer = ModelCheckpoint(filepath="%stempmodel%d.h5" % (params["resultsDir"], int(time.time())), verbose=1, save_best_only=True)
+checkpointer = ModelCheckpoint(filepath="%stempmodel%d.h5" % (params["resultsDir"], int(time.time())), verbose=1, save_best_only=False)
 history = modelUtils.LossHistory()
 model.fit(X, Y, batch_size=params["batchSize"], nb_epoch=params["epochs"], callbacks=[checkpointer, history])
 
@@ -86,7 +86,7 @@ model.save_weights("%smodel%d.h5" % (params["resultsDir"], currentTime))
 
 #Predict
 print("Composing new song...")
-(song, energy) = modelUtils.generateSong(model, X[step])
+(song, energy) = modelUtils.generateSong(model, X[seqLength])
 
 #Save data to representation and midi formats
 print("Storing song representation")
