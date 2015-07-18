@@ -86,7 +86,7 @@ model.save_weights("%smodel%d.h5" % (params["resultsDir"], currentTime))
 
 #Predict
 print("Composing new song...")
-(song, energy) = modelUtils.generateSong(model, X[seqLength])
+(song, energy) = modelUtils.generateSong(model, X[params["seqLength"]])
 
 #Save data to representation and midi formats
 print("Storing song representation")
