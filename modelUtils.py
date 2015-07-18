@@ -19,10 +19,10 @@ def loadIni(name):
 
 	params["epochs"] = int(config.get("model", "epochs")) or 100
 	params["batchSize"] = int(config.get("model", "batch-size")) or 12
-
-
+	params["resultsDir"] = config.get("model", "results-dir") or "./"
 
 	return params
+
 
 class LossHistory(Callback):
 	def on_train_begin(self, logs={}):

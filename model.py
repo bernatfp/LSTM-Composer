@@ -13,6 +13,7 @@ if sys.version_info[0] is not 2 and sys.version_info[1] is not 7:
 	print("Please run this program with Python 2.7")
 	sys.exit(-1)
 
+'''
 #move this logic to the .ini file
 DICE = False
 if "DICE" in os.environ and os.environ["DICE"] == '1':
@@ -26,7 +27,7 @@ else:
 	print("Running on DICE...")
 	dataset_path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/midiFiles/"
 	test_path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/testMidi/"
-
+'''
 
 #Load configuration
 print ("Loading configuration...")
@@ -74,14 +75,14 @@ model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 #Train
 print("Training...")
-checkpointer = ModelCheckpoint(filepath="%stempmodel%d.h5" % (test_path, int(time.time())), verbose=1, save_best_only=True)
+checkpointer = ModelCheckpoint(filepath="%stempmodel%d.h5" % (params["resultsDir"], int(time.time())), verbose=1, save_best_only=True)
 history = modelUtils.LossHistory()
-model.fit(X, Y, batch_size=12, nb_epoch=400, callbacks=[checkpointer, history])
+model.fit(X, Y, batch_size=params["batchSize"], nb_epoch=params["epochs"], callbacks=[checkpointer, history])
 
 #Save model
 print("Saving model...")
 currentTime = int(time.time())
-model.save_weights("%smodel%d.h5" % (test_path, currentTime))
+model.save_weights("%smodel%d.h5" % (params["resultsDir"], currentTime))
 
 #Predict
 print("Composing new song...")
@@ -89,12 +90,12 @@ print("Composing new song...")
 
 #Save data to representation and midi formats
 print("Storing song representation")
-dataUtils.saveRepresentation(song, "songoutput%d.nn" % (currentTime))
+dataUtils.saveData(song, "songoutput%d.nn" % (currentTime))
 print("Storing song in midi format")
 dataUtils.roll2midi(song)
 print("Loss history")
 print(history.losses)
-dataUtils.saveRepresentation(history.losses, "losses%d.nn" % (currentTime))
+dataUtils.saveData(history.losses, "losses%d.nn" % (currentTime))
 
 
 print "Finished execution at time %d" % (currentTime)

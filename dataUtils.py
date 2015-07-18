@@ -17,11 +17,11 @@ else:
 
 
 
-def saveRepresentation(data, fileName):
+def saveData(data, fileName):
 	with open(test_path + fileName, 'wb') as f:
 		pickle.dump(data, f)
 
-def loadRepresentation(fileName):
+def loadData(fileName):
 	with open(test_path + fileName, 'rb') as f:
 		data = pickle.load(f)
 		return data
@@ -195,7 +195,7 @@ def createModelInputs(roll, seqLength=50, inc=1, padding=False):
 		if padding == True:
 			pos = 0
 			empty = np.zeros((seqLength,128))
-			while (pos < step and pos < song.shape[0]):
+			while (pos < seqLength and pos < song.shape[0]):
 				#zeros + part of seq
 				sample = np.concatenate((empty[pos:],song[:pos]))
 				X.append(sample)
