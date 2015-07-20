@@ -38,7 +38,7 @@ def generateSong(model, kickstart, method="sample", chunkLength=20, songLength=3
 	elif method == "threshold":
 		createOutput = dataUtils.thresholdOutput
 	else:
-		print "Error, method %s does not exist!" % (method)
+		print("Error, method %s does not exist!" % (method))
 		return ([],[])
 
 	probs = []
@@ -49,6 +49,10 @@ def generateSong(model, kickstart, method="sample", chunkLength=20, songLength=3
 		x = model.predict(lastnotes, batch_size=1)
 		probs.extend(np.copy(x))
 		x[0] = createOutput(x[0])
+		if x[0][-1] == 1:
+			print("End of song at ts %d/%d" % (i, songLength))
+			break
+			
 		song = np.concatenate((song, x))
 
 	return (song, probs)

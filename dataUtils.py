@@ -74,7 +74,7 @@ def createRepresentation(dataDir, limitSongs=0, reductionRatio=128):
 		if ".mid" in fileName: #check
 			print "Loading file %d: %s" % (idx+1, fileName)
 			mid = MidiFile(dataDir + fileName)
-			song = np.zeros(np.array((np.ceil(timesteps[idx]/float(reductionRatio)), 128)))
+			song = np.zeros(np.array((np.ceil(1+timesteps[idx]/float(reductionRatio)), 128+1))) #1 additional note to denote end of track
 			for i, track in enumerate(mid.tracks):
 				if i != 0: #track 0 contains meta info we don't need
 					ts = 0 #init time
@@ -85,7 +85,7 @@ def createRepresentation(dataDir, limitSongs=0, reductionRatio=128):
 						while ticks > 0: #advance timestep pointer to delta while we keep enabling the activated notes
 							for note in notesOn:
 								#songs[idx][ts][note-1] = 1
-								song[ts][note-1] = 1
+								song[ts][note] = 1
 							ticks -= 1
 							realts += 1
 							if np.floor(realts/float(reductionRatio)) > ts:
@@ -97,6 +97,8 @@ def createRepresentation(dataDir, limitSongs=0, reductionRatio=128):
 						if message.type == 'note_off':
 							notesOn.remove(message.note) #To do: check if ValueError is triggered
 
+			#denote end of track
+			song[-1][-1] = 1
 			#add to songs
 			songs.append(song)
 
@@ -122,9 +124,7 @@ def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim)
 	track = MidiTrack()
 	mid.tracks.append(track)
 
-	#To Do: translate representation from real to binary values
-
-	tones = np.zeros(roll.shape[2])
+	tones = np.zeros(roll.shape[1])
 	ticks = 0
 	for ts in roll[0]:
 		for i in range(len(ts)):
@@ -160,7 +160,7 @@ def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim)
 
 #This function removes unnecessary notes and returns mapping of indexes to notes
 def compressInputs(X, Y):
-	notesDel = set(range(128))
+	notesDel = set(range(129))
 	for i in range(X.shape[0]):
 		for j in range(X.shape[1]):
 			for k in range(X.shape[2]):
@@ -176,7 +176,7 @@ def compressInputs(X, Y):
 	X = np.delete(X, list(notesDel), 2)
 	Y = np.delete(Y, list(notesDel), 1)
 
-	notesMap = set(range(128)).difference(notesDel)
+	notesMap = set(range(129)).difference(notesDel)
 
 	return X, Y, list(notesMap)
 
@@ -194,7 +194,7 @@ def createModelInputs(roll, seqLength=50, inc=1, padding=False):
 		#start (padding + seq)
 		if padding == True:
 			pos = 0
-			empty = np.zeros((seqLength,128))
+			empty = np.zeros((seqLength,128+1))
 			while (pos < seqLength and pos < song.shape[0]):
 				#zeros + part of seq
 				sample = np.concatenate((empty[pos:],song[:pos]))
