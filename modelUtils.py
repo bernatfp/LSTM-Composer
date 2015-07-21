@@ -21,6 +21,12 @@ def loadIni(name):
 	params["batchSize"] = int(config.get("model", "batch-size")) or 12
 	params["resultsDir"] = config.get("model", "results-dir") or "./"
 
+	if params["dataDir"][-1] != '/':
+		params["dataDir"] += '/'
+
+	if params["resultsDir"][-1] != '/':
+		params["resultsDir"] += '/'
+	
 	return params
 
 
@@ -52,7 +58,7 @@ def generateSong(model, kickstart, method="sample", chunkLength=20, songLength=3
 		if x[0][-1] == 1:
 			print("End of song at ts %d/%d" % (i, songLength))
 			break
-			
+
 		song = np.concatenate((song, x))
 
 	return (song, probs)

@@ -69,7 +69,6 @@ model.add(LSTM(input_dim, input_dim*2, return_sequences=True))
 model.add(Dense(input_dim*2, input_dim*2))
 model.add(LSTM(input_dim*2, input_dim))
 
-
 print("Compiling model...")
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
@@ -80,9 +79,15 @@ history = modelUtils.LossHistory()
 model.fit(X, Y, batch_size=params["batchSize"], nb_epoch=params["epochs"], callbacks=[checkpointer, history])
 
 #Save model
-print("Saving model...")
+print("Saving model and parameters...")
 currentTime = int(time.time())
-model.save_weights("%smodel%d.h5" % (params["resultsDir"], currentTime))
+resultsDir = "%s%d" % (params["resultsDir"], currentTime)
+os.mkdir(resultsDir)
+model.save_weights("%smodel.h5" % (resultsDir))
+params["notesMap"] = notesMap
+params["inputDim"] = input_dim
+params["lossHistory"] = history.losses
+dataUtils.saveData(params, "%sparams.nn" % (resultsDir))
 
 #Predict
 print("Composing new song...")
@@ -90,12 +95,11 @@ print("Composing new song...")
 
 #Save data to representation and midi formats
 print("Storing song representation")
-dataUtils.saveData(song, "songoutput%d.nn" % (currentTime))
+dataUtils.saveData(song, "%ssongoutput" % (resultsDir))
 print("Storing song in midi format")
-dataUtils.roll2midi(song, notesMap, params["reductionRatio"])
-print("Loss history")
+mid = dataUtils.roll2midi(song, notesMap, params["reductionRatio"])
+dataUtils.saveMidi(mid, resultsDir)
+print("Loss history:")
 print(history.losses)
-dataUtils.saveData(history.losses, "losses%d.nn" % (currentTime))
-
 
 print "Finished execution at time %d" % (currentTime)

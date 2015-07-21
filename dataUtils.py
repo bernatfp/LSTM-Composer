@@ -17,12 +17,12 @@ else:
 
 
 
-def saveData(data, fileName):
-	with open(test_path + fileName, 'wb') as f:
+def saveData(data, dataDir):
+	with open(dataDir, 'wb') as f:
 		pickle.dump(data, f)
 
-def loadData(fileName):
-	with open(test_path + fileName, 'rb') as f:
+def loadData(dataDir):
+	with open(dataDir, 'rb') as f:
 		data = pickle.load(f)
 		return data
 
@@ -61,9 +61,6 @@ def createRepresentation(dataDir, limitSongs=0, reductionRatio=128):
 	#perhaps it would make more sense to create a midi2roll function aside and simplify this one
 	#To Do: if limitSongs is bigger than the actual maximum or is 0 we should look for the number of files in the path to determine the first dimension
 	#To Do: extract notes that are triggered so that we can reduce the third dimension from 128 to a smaller value
-	
-	if dataDir[-1] != '/':
-		dataDir += '/'
 
 	#timesteps = maxTimesteps(limitSongs)
 	#songs = np.zeros((limitSongs, timesteps, 128))
@@ -148,15 +145,10 @@ def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim)
 			track.append(Message('note_off', note=notesMap[i], time=ticks*reductionRatio))
 			ticks = 0
 
-
-
-	#track.append(midi.Message('note_on', note=64, velocity=64, time=32)
-	#track.append(midi.Message('note_off', note=64, velocity=127, time=32)
-
-	mid.save("%snew_song%d.mid" % (test_path, int(time.time())))
-
 	return mid
 
+def saveMidi(mid, path):
+	mid.save("%ssong.mid" % (path))
 
 #This function removes unnecessary notes and returns mapping of indexes to notes
 def compressInputs(X, Y):
