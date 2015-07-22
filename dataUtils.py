@@ -129,7 +129,7 @@ def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim)
 		ticks += 1
 
 	#last pass for notes off (end of track)	
-	for i in range(roll.shape[2]):
+	for i in range(roll.shape[1]):
 		if tones[i] == 1:
 			track.append(Message('note_off', note=notesMap[i], time=ticks*reductionRatio))
 			ticks = 0
