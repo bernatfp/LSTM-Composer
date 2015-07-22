@@ -13,22 +13,6 @@ if sys.version_info[0] is not 2 and sys.version_info[1] is not 7:
 	print("Please run this program with Python 2.7")
 	sys.exit(-1)
 
-'''
-#move this logic to the .ini file
-DICE = False
-if "DICE" in os.environ and os.environ["DICE"] == '1':
-	DICE = True
-
-if DICE == False:
-	print("Running on personal computer...")
-	dataset_path = "/Users/Bernat/Dropbox/UoE/Dissertation/midiFiles/"
-	test_path = "/Users/Bernat/Dropbox/UoE/Dissertation/testMidi/"
-else:
-	print("Running on DICE...")
-	dataset_path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/midiFiles/"
-	test_path = "/afs/inf.ed.ac.uk/user/s14/s1471922/Dissertation/testMidi/"
-'''
-
 #Load configuration
 print ("Loading configuration...")
 params = modelUtils.loadIni(sys.argv[1] if len(sys.argv) == 2 else "config.ini")
@@ -81,7 +65,7 @@ model.fit(X, Y, batch_size=params["batchSize"], nb_epoch=params["epochs"], callb
 #Save model
 print("Saving model and parameters...")
 currentTime = int(time.time())
-resultsDir = "%s%d" % (params["resultsDir"], currentTime)
+resultsDir = "%s%d/" % (params["resultsDir"], currentTime)
 os.mkdir(resultsDir)
 model.save_weights("%smodel.h5" % (resultsDir))
 params["notesMap"] = notesMap
