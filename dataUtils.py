@@ -159,7 +159,7 @@ def compressInputs(X, Y):
 
 	notesMap = set(range(129)).difference(notesDel)
 
-	return X, Y, list(notesMap)
+	return X, Y, sorted(list(notesMap))
 
 
 #This function creates samples out of each song
