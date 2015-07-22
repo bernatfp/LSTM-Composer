@@ -83,7 +83,5 @@ dataUtils.saveData(song, "%ssongoutput" % (resultsDir))
 print("Storing song in midi format")
 mid = dataUtils.roll2midi(song, notesMap, params["reductionRatio"])
 dataUtils.saveMidi(mid, resultsDir)
-print("Loss history:")
-print(history.losses)
 
 print "Finished execution at time %d" % (currentTime)
