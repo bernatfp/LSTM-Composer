@@ -113,6 +113,8 @@ def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim)
 	ticks = 0
 	for ts in roll:
 		for i in range(ts.shape[0]):
+			print i, notesMap[i]
+
 			if ts[i] == 1 and tones[i] == 0:
 				#record note_on event
 				track.append(Message('note_on', velocity=127, note=notesMap[i], time=ticks*reductionRatio))
