@@ -112,8 +112,7 @@ def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim)
 	tones = np.zeros(roll.shape[1])
 	ticks = 0
 	for ts in roll:
-		for i in range(ts.shape[0]):
-			print i, notesMap[i]
+		for i in range(ts.shape[0]-1):
 
 			if ts[i] == 1 and tones[i] == 0:
 				#record note_on event
