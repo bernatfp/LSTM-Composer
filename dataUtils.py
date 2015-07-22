@@ -124,7 +124,7 @@ def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim)
 	tones = np.zeros(roll.shape[1])
 	ticks = 0
 	for ts in roll[0]:
-		for i in range(len(ts)):
+		for i in range(ts.shape[0]):
 			if ts[i] == 1 and tones[i] == 0:
 				#record note_on event
 				track.append(Message('note_on', velocity=127, note=notesMap[i], time=ticks*reductionRatio))
@@ -224,6 +224,7 @@ def countDifferentTones(song):
 
 def plotSong(song):
 	plt.matshow(np.transpose(song))
+	plt.colorbar()
 	plt.show()
 
 
