@@ -32,6 +32,8 @@ def maxTimesteps(limitSongs):
 def getTimesteps(dataDir, limitSongs):
 	timesteps = []
 	for fileName in os.listdir(dataDir):
+		print fileName
+		print dataDir + fileName
 		if ".mid" in fileName:
 			mid = MidiFile(dataDir + fileName) 
 			numSteps = 0
