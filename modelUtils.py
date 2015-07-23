@@ -19,7 +19,8 @@ def loadIni(name):
 
 	params["epochs"] = int(config.get("model", "epochs")) or 100
 	params["batchSize"] = int(config.get("model", "batch-size")) or 12
-	params["resultsDir"] = config.get("model", "results-dir") or "./"
+	
+	params["resultsDir"] = config.get("results", "results-dir") or "./"
 
 	if params["dataDir"][-1] != '/':
 		params["dataDir"] += '/'
