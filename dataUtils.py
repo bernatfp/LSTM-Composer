@@ -216,6 +216,15 @@ def plotSong(song):
 	plt.colorbar()
 	plt.show()
 
+def plotMK(mkmat):
 
+	mat = np.zeros((mkmat.shape[1]*2, mkmat.shape[2]*2))
+	mat[:mkmat.shape[1]][:mkmat.shape[2]] = mkmat[0]
+	mat[mkmat.shape[1]:][mkmat.shape[2]:] = mkmat[1]
+	mat[:mkmat.shape[1]][mkmat.shape[2]:] = mkmat[2]
+	mat[mkmat.shape[1]:][:mkmat.shape[2]] = np.transpose(mkmat[2])
 
+	plt.matshow(np.transpose(mkmat))
+	plt.colorbar()
+	plt.show()
 

@@ -78,21 +78,25 @@ def evalModel(model, songs, N, k=4, m=1):
 	#MMD part:
 	#compare each one to the others using kernel
 	MMD = 0
+	mkmat = np.zeros((3,N,N))
 	for i in range(N):
 		for j in range(N):
+			mkmat[0][i][j] = mismatchKernel(songs[i], songs[j])
 			if i != j:
-				MMD += 1/(N*(N-1))*mismatchKernel(songs[i], songs[j])
+				MMD += 1/(N*(N-1)) * mkmat[0][i][j]
 
 	for i in range(N):
 		for j in range(N):
+			mkmat[1][i][j] = mismatchKernel(sampledSongs[i], sampledSongs[j])
 			if i != j:
-				MMD += 1/(N*(N-1))*mismatchKernel(sampledSongs[i], sampledSongs[j])
+				MMD += 1/(N*(N-1)) * mkmat[1][i][j]
 
 	for i in range(N):
-		for j in range(N):	
-			MMD += 1/(N*N)*mismatchKernel(sampledSongs[i], songs[j])
+		for j in range(N):
+			mkmat[2][i][j] = mismatchKernel(sampledSongs[i], songs[j])	
+			MMD += 1/(N*N) * mkmat[2][i][j]
 
-	return MMD
+	return MMD, mkmat
 
 
 def mismatchKernel(X, Y, k=4, m=1, normalized=False):
