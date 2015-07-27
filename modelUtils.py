@@ -64,3 +64,46 @@ def generateSong(model, kickstart, method="sample", chunkLength=20, songLength=3
 
 	return (song, probs)
 
+def evalModel(model, songs, N, k=4, m=1):	
+	#limit number of songs
+	N = min(N, len(songs))
+
+	#generate N songs from model
+	sampledSongs = []
+	chunkLength = 20
+	songLength = int(np.mean(map(lambda s: s.shape[0], songs)))
+	for n in range(N):
+		sampledSongs.append(generateSong(model, songs[n][-chunkLength:], "sample", chunkLength, songLength)[0])
+	
+	#MMD part:
+	#compare each one to the others using kernel
+	MMD = 0
+	for i in range(N):
+		for j in range(N):
+			if i != j:
+				MMD += 1/(N*(N-1))*mismatchKernel(songs[i], songs[j])
+
+	for i in range(N):
+		for j in range(N):
+			if i != j:
+				MMD += 1/(N*(N-1))*mismatchKernel(sampledSongs[i], sampledSongs[j])
+
+	for i in range(N):
+		for j in range(N):	
+			MMD += 1/(N*N)*mismatchKernel(sampledSongs[i], songs[j])
+
+	return MMD
+
+
+def mismatchKernel(X, Y, k=4, m=1, normalized=False):
+	matches = 0
+	for i in xrange(len(X)-(k-1)):
+		for j in xrange(len(Y)-(k-1)):
+			if sum(map(lambda x, y: 0 if x==y else 1, X[i:i+k], Y[j:j+k])) <= m:
+				matches += 1
+
+	if normalized == True:
+		return matches / (np.sqrt(mismatchKernel(X, X, k, m)) * np.sqrt(mismatchKernel(Y, Y, k, m)))
+
+	return matches
+
