@@ -64,46 +64,116 @@ def generateSong(model, kickstart, method="sample", chunkLength=20, songLength=3
 
 	return (song, probs)
 
-def evalModel(model, songs, N, k=4, m=1):	
+#To Do: Rethink structure of the function. There's some very inefficient redundancies here
+def evalModel(model, roll, X, params, N, k=4, m=1):	
 	#limit number of songs
-	N = min(N, len(songs))
+	N = min(N, len(roll))
+
+	'''
+	#Need to generate kickstarts from the roll for the model
+	#print("Creating kickstarts")
+	#X, Y = dataUtils.createModelInputs(roll, padding=params["padding"], seqLength=params["seqLength"], inc=params["inc"])
+	#X, Y, notesMap = dataUtils.compressInputs(X, Y)
+	#input_dim = len(notesMap)
+	'''
 
 	#generate N songs from model
+	print("Sampling songs")
 	sampledSongs = []
 	chunkLength = 20
-	songLength = int(np.mean(map(lambda s: s.shape[0], songs)))
+	songLength = int(np.mean(map(lambda s: s.shape[0], roll)))
 	for n in range(N):
-		sampledSongs.append(generateSong(model, songs[n][-chunkLength:], "sample", chunkLength, songLength)[0])
+		print("Song %d" % n)
+		sampledSongs.append(generateSong(model, X[n][-chunkLength:], "sample", chunkLength, songLength)[0])
 	
-	#MMD part:
+	print("Expanding sampled songs...")
+	dataUtils.expandInputs(sampledSongs, params["notesMap"][:-1])
+
+	#MMD part: 
 	#compare each one to the others using kernel
 	MMD = 0
 	mkmat = np.zeros((3,N,N))
+	count = 1
 	for i in range(N):
 		for j in range(N):
-			mkmat[0][i][j] = mismatchKernel(songs[i], songs[j])
+			print("Mismatch Kernel: %d/%d" % (count, 3*N**2))
+			count += 1
+			mkmat[0][i][j] = mismatchKernel(roll[i], roll[j])
 			if i != j:
 				MMD += 1/(N*(N-1)) * mkmat[0][i][j]
 
 	for i in range(N):
 		for j in range(N):
+			print("Mismatch Kernel: %d/%d" % (count, 3*N**2))
+			count += 1
 			mkmat[1][i][j] = mismatchKernel(sampledSongs[i], sampledSongs[j])
 			if i != j:
 				MMD += 1/(N*(N-1)) * mkmat[1][i][j]
 
 	for i in range(N):
 		for j in range(N):
-			mkmat[2][i][j] = mismatchKernel(sampledSongs[i], songs[j])	
+			print("Mismatch Kernel: %d/%d" % (count, 3*N**2))
+			count += 1
+			mkmat[2][i][j] = mismatchKernel(sampledSongs[i], roll[j])	
 			MMD += 1/(N*N) * mkmat[2][i][j]
 
 	return MMD, mkmat
 
+def MMD(X, Y, N, k=4, m=1, normalized=False):
+	#MMD part: 
+	#compare each one to the others using kernel
+	MMD = 0.0
+	mkmat = np.zeros((3,N,N)) - 1
+	count = 1
+	for i in range(N):
+		for j in range(N):
+			print("Mismatch Kernel: %d/%d" % (count, 3*N**2))
+			count += 1
+			if mkmat[0][j][i] >= 0:
+				mkmat[0][i][j] = mkmat[0][j][i]
+			elif i==j:
+				mkmat[0][i][j] = len(X[i])-k+m
+			else:
+				mkmat[0][i][j] = mismatchKernel(X[i], X[j], k, m, normalized)
+
+			if i != j:
+				MMD += 1.0/(N*(N-1)) * mkmat[0][i][j]
+
+	for i in range(N):
+		for j in range(N):
+			print("Mismatch Kernel: %d/%d" % (count, 3*N**2))
+			count += 1
+			if mkmat[1][j][i] >= 0:
+				mkmat[1][i][j] = mkmat[1][j][i]
+			elif i==j:
+				mkmat[1][i][j] = len(X[i])-k+m
+			else:
+				mkmat[1][i][j] = mismatchKernel(Y[i], Y[j], k, m, normalized)
+
+			if i != j:
+				MMD += 1.0/(N*(N-1)) * mkmat[1][i][j]
+
+	for i in range(N):
+		for j in range(N):
+			print("Mismatch Kernel: %d/%d" % (count, 3*N**2))
+			count += 1
+			if mkmat[2][j][i] >= 0:
+				mkmat[2][i][j] = mkmat[2][j][i]
+			else:
+				mkmat[2][i][j] = mismatchKernel(Y[i], X[j], k, m, normalized)	
+			MMD += 1.0/(N*N) * mkmat[2][i][j]
+
+	return MMD, mkmat
 
 def mismatchKernel(X, Y, k=4, m=1, normalized=False):
 	matches = 0
-	for i in xrange(len(X)-(k-1)):
-		for j in xrange(len(Y)-(k-1)):
-			if sum(map(lambda x, y: 0 if x==y else 1, X[i:i+k], Y[j:j+k])) <= m:
+	for i in xrange(X.shape[0]-(k-1)):
+		for j in xrange(X.shape[0]-(k-1)):
+			if sum(map(lambda x, y: 0 if np.array_equal(x, y) else 1, X[i:i+k], Y[j:j+k])) <= m:
+				print "--------"
+				print X[i:i+k]
+				print Y[j:j+k]
+				print "--------"
 				matches += 1
 
 	if normalized == True:
@@ -111,3 +181,19 @@ def mismatchKernel(X, Y, k=4, m=1, normalized=False):
 
 	return matches
 
+def testMMD():
+	N = 4
+	testseq = np.zeros((10,5))
+	for i in range(testseq.shape[0]):
+		for j in range(testseq.shape[1]):
+			testseq[i,j] = np.random.randint(2)
+
+	X = np.zeros((N,testseq.shape[0],testseq.shape[1]))
+	for i in range(X.shape[0]):
+		X[i] = testseq
+
+	#Y = X[:,::-1,:]
+	Y = np.copy(X)
+	Y[0,:,:] = np.zeros((10,5))
+
+	return MMD(X, Y, N)

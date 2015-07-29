@@ -210,6 +210,14 @@ def countDifferentTones(song):
 			tones += 1
 	return tones
 
+def expandInputs(songs, notesMap):
+	songsList = []
+	for i in xrange(len(songs)):
+		song = np.zeros((songs[i].shape[0],128))
+		for j in xrange(songs[i].shape[0]):
+			for k in xrange(len(notesMap)):
+				song[j][notesMap[k]] = songs[i][j][k]
+		songsList.append(song)
 
 def plotSong(song):
 	plt.matshow(np.transpose(song))
@@ -219,12 +227,13 @@ def plotSong(song):
 def plotMK(mkmat):
 
 	mat = np.zeros((mkmat.shape[1]*2, mkmat.shape[2]*2))
-	mat[:mkmat.shape[1]][:mkmat.shape[2]] = mkmat[0]
-	mat[mkmat.shape[1]:][mkmat.shape[2]:] = mkmat[1]
-	mat[:mkmat.shape[1]][mkmat.shape[2]:] = mkmat[2]
-	mat[mkmat.shape[1]:][:mkmat.shape[2]] = np.transpose(mkmat[2])
+	mat[:mkmat.shape[1], :mkmat.shape[2]] = mkmat[0]
+	mat[mkmat.shape[1]:, mkmat.shape[2]:] = mkmat[1]
+	mat[:mkmat.shape[1], mkmat.shape[2]:] = mkmat[2]
+	mat[mkmat.shape[1]:, :mkmat.shape[2]] = np.transpose(mkmat[2])
 
-	plt.matshow(np.transpose(mkmat))
+	plt.matshow(mat)
 	plt.colorbar()
 	plt.show()
+
 
