@@ -17,7 +17,7 @@ def loadData(dataDir):
 
 def maxTimesteps(limitSongs):
 	maxSteps = 0
-	for fileName in os.listdir(dataset_path):
+	for fileName in sorted(os.listdir(dataset_path)):
 		if ".mid" in fileName:
 			mid = MidiFile(dataset_path + fileName) 
 			numSteps = 0
@@ -31,7 +31,7 @@ def maxTimesteps(limitSongs):
 
 def getTimesteps(dataDir, limitSongs):
 	timesteps = []
-	for fileName in os.listdir(dataDir):
+	for fileName in sorted(os.listdir(dataDir)):
 		if ".mid" in fileName:
 			mid = MidiFile(dataDir + fileName) 
 			numSteps = 0
@@ -55,7 +55,7 @@ def createRepresentation(dataDir, limitSongs=0, reductionRatio=128):
 	timesteps = getTimesteps(dataDir, limitSongs)
 	songs = []
 	idx = 0
-	for fileName in os.listdir(dataDir): #iterate per file
+	for fileName in sorted(os.listdir(dataDir)): #iterate per file
 		if ".mid" in fileName: #check
 			print "Loading file %d: %s" % (idx+1, fileName)
 			mid = MidiFile(dataDir + fileName)
@@ -96,12 +96,17 @@ def createRepresentation(dataDir, limitSongs=0, reductionRatio=128):
 
 	return songs
 
-def thresholdOutput(x, threshold=0.5):
+def thresholdOutput(x, threshold=0.5, normalize=False):
 	return [0 if note < threshold else 1 for note in x]
 
-def sampleOutput(x):
-	return [0 if np.random.uniform() > note else 1 for note in x]
+def sampleOutput(x, normalize=False):
+	if normalize:
+		return [0 if np.random.uniform() > normalizeProbability(note) else 1 for note in x]
+	else:
+		return [0 if np.random.uniform() > note else 1 for note in x]
 
+def normalizeProbability(prob):
+	return 1/(1+np.power(10000, (-prob + 0.5)))
 
 def roll2midi(roll, notesMap, reductionRatio=128): #roll is a (1, ts, input_dim) tensor
 	mid = MidiFile()
@@ -140,9 +145,10 @@ def saveMidi(mid, path):
 	mid.save("%ssong.mid" % (path))
 
 #This function removes unnecessary notes and returns mapping of indexes to notes
-def compressInputs(X, Y):
+def compressInputs(X, Y, notesMap=None):
 	notesDel = set(range(129))
 	for i in range(X.shape[0]):
+		print i
 		for j in range(X.shape[1]):
 			for k in range(X.shape[2]):
 				if X[i][j][k] == 1 and k in notesDel:
@@ -153,6 +159,9 @@ def compressInputs(X, Y):
 		for k in range(Y.shape[1]):
 			if Y[i][k] == 1 and k in notesDel:
 				notesDel.remove(k)
+
+	if notesMap is not None:
+		notesDel = notesDel.difference(set(notesMap))
 		
 	X = np.delete(X, list(notesDel), 2)
 	Y = np.delete(Y, list(notesDel), 1)
@@ -222,6 +231,38 @@ def expandInputs(songs, notesMap):
 def plotSong(song):
 	plt.matshow(np.transpose(song))
 	plt.colorbar()
+	plt.show()
+
+def plot2Songs(s1, s2):
+	f, (ax1, ax2) = plt.subplots(2)
+	m1 = ax1.matshow(np.transpose(s1))
+	ax1.set_title('Original song')
+	ax2.matshow(np.transpose(s2))
+	ax2.set_title('Probabilities at middle layer')
+	# Fine-tune figure; make subplots close to each other and hide x ticks for
+	# all but bottom plot.
+	f.subplots_adjust(right=0.8)
+	cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
+	f.colorbar(m1,cax=cbar_ax)
+	#plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+	plt.show()
+
+
+
+def plot3Songs(s1, s2, s3):
+	f, (ax1, ax2, ax3) = plt.subplots(3)
+	m1 = ax1.matshow(np.transpose(s1))
+	#ax1.set_title('Original song')
+	ax2.matshow(np.transpose(s2))
+	#ax2.set_title('Probabilities at middle layer')
+	ax3.matshow(np.transpose(s3))
+	#ax3.set_title('Output song')
+	# Fine-tune figure; make subplots close to each other and hide x ticks for
+	# all but bottom plot.
+	f.subplots_adjust(right=0.8)
+	cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
+	f.colorbar(m1,cax=cbar_ax)
+	#plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
 	plt.show()
 
 def plotMK(mkmat):
