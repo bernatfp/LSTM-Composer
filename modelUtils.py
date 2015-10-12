@@ -123,11 +123,11 @@ def evalModel(model, Y, N=20, k=4, m=1):
 
 	#MMD
 	#Call func
-	mmd, mkmat = MMD(originalSongs, sampledSongs, N)
+	mmd, mkmat = computeMMD(originalSongs, sampledSongs, N)
 
 	return mmd, mkmat
 
-def MMD(X, Y, N, k=4, m=1, normalized=False):
+def computeMMD(X, Y, N, k=4, m=1, normalized=False):
 	#Precompute kernel of each instance
 	normalized = np.zeros((N,2))
 	for i in range(N):
@@ -179,9 +179,20 @@ def MMD(X, Y, N, k=4, m=1, normalized=False):
 			else:
 				normalized_pair = [normalized[i][0], normalized[j][1]]
 				mkmat[2][i][j] = mismatchKernel(X[i], Y[j], k, m, normalized_pair)	
-			MMD += 1.0/(N*N) * mkmat[2][i][j]
+			MMD -= 2.0/(N*N) * mkmat[2][i][j]
 
 	return MMD, mkmat
+
+def MMDfromMkmat(mkmat):
+	N = mkmat.shape[1]
+	MMD = 0.0
+	for i in range(N):
+		for j in range(N):
+			if i != j:
+				MMD += (1.0/(N*(N-1))) * mkmat[0][i][j]
+				MMD += (1.0/(N*(N-1))) * mkmat[1][i][j]
+		MMD -= (2.0/(N*N)) * mkmat[2][i][j]
+	return MMD
 
 def mismatchKernel(X, Y, k=4, m=1, normalized=None):
 	matches = 0

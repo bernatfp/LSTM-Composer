@@ -166,6 +166,7 @@ def compressInputs(X, Y, notesMap=None):
 	X = np.delete(X, list(notesDel), 2)
 	Y = np.delete(Y, list(notesDel), 1)
 
+
 	notesMap = set(range(129)).difference(notesDel)
 
 	return X, Y, sorted(list(notesMap))
@@ -236,9 +237,9 @@ def plotSong(song):
 def plot2Songs(s1, s2):
 	f, (ax1, ax2) = plt.subplots(2)
 	m1 = ax1.matshow(np.transpose(s1))
-	ax1.set_title('Original song')
+	#ax1.set_title('Original song')
 	ax2.matshow(np.transpose(s2))
-	ax2.set_title('Probabilities at middle layer')
+	#ax2.set_title('Probabilities at middle layer')
 	# Fine-tune figure; make subplots close to each other and hide x ticks for
 	# all but bottom plot.
 	f.subplots_adjust(right=0.8)
